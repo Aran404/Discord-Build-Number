@@ -1,4 +1,4 @@
-package build
+package discord_build_number
 
 import (
 	tls_client "github.com/bogdanfinn/tls-client"

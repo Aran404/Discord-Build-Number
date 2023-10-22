@@ -1,4 +1,4 @@
-package build
+package discord_build_number
 
 import (
 	http "github.com/bogdanfinn/fhttp"
