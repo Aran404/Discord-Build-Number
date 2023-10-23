@@ -5,7 +5,7 @@ Elegant way of getting the discord build number.
 package main
 
 import (
-	build "github.com/Aran404/Discord-Build-Numbe/Core/Build"
+	build "github.com/Aran404/Discord-Build-Number"
 	"fmt"
 )
 
