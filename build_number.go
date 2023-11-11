@@ -20,7 +20,7 @@ func (in *Instance) GetBuildNumber() (string, error) {
 	}
 
 	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9]+)\.js`).FindAll(resp.Body, -1)
-	jsFileParsed := strings.Split(string(jsFile[3]), "assets/")[1]
+	jsFileParsed := strings.Split(string(jsFile[81]), "assets/")[1]
 	buildNumber, err := in._GetBuildNumber(jsFileParsed)
 
 	in.BuildNumber = buildNumber
@@ -43,7 +43,7 @@ func (in *Instance) _GetBuildNumber(js string) (string, error) {
 		return "", fmt.Errorf("could not get build number, Status Code: %v", request.StatusCode)
 	}
 
-	buildNumber := strings.Split(strings.Split(string(request.Body), `Build Number: ").concat("`)[1], `"`)[0]
+	buildNumber := strings.Split(strings.Split(string(request.Body), `buildNumber:"`)[1], `"`)[0]
 
 	return buildNumber, nil
 }
