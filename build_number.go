@@ -20,7 +20,7 @@ func (in *Instance) GetBuildNumber() (string, error) {
 	}
 
 	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9.]+)\.js`).FindAll(resp.Body, -1)
-	jsFileParsed := strings.Split(string(jsFile[81]), "assets/")[1]
+	jsFileParsed := strings.Split(string(jsFile[86]), "assets/")[1]
 	buildNumber, err := in._GetBuildNumber(jsFileParsed)
 
 	in.BuildNumber = buildNumber
