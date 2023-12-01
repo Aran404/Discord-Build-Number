@@ -19,7 +19,7 @@ func (in *Instance) GetBuildNumber() (string, error) {
 		return "", fmt.Errorf("could not get sesssion, status code: %v", resp.StatusCode)
 	}
 
-	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9]+)\.js`).FindAll(resp.Body, -1)
+	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9.]+)\.js`).FindAll(resp.Body, -1)
 	jsFileParsed := strings.Split(string(jsFile[81]), "assets/")[1]
 	buildNumber, err := in._GetBuildNumber(jsFileParsed)
 
