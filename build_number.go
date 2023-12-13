@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 func (in *Instance) GetBuildNumber() (string, error) {
@@ -20,32 +21,48 @@ func (in *Instance) GetBuildNumber() (string, error) {
 	}
 
 	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9.]+)\.js`).FindAll(resp.Body, -1)
-	jsFileParsed := strings.Split(string(jsFile[86]), "assets/")[1]
-	buildNumber, err := in._GetBuildNumber(jsFileParsed)
 
-	in.BuildNumber = buildNumber
+	var wg sync.WaitGroup
+	respCh := make(chan string, 1)
 
-	if err != nil {
-		return "", err
+	for _, v := range jsFile {
+		wg.Add(1)
+		go func(js string) {
+			defer wg.Done()
+			jsFileParsed := strings.Split(string(js), "assets/")[1]
+
+			in._GetBuildNumber(jsFileParsed, respCh)
+		}(string(v))
 	}
+
+	go func() {
+		wg.Wait()
+		close(respCh)
+	}()
+
+	in.BuildNumber = <-respCh
 
 	return in.BuildNumber, nil
 }
 
-func (in *Instance) _GetBuildNumber(js string) (string, error) {
+func (in *Instance) _GetBuildNumber(js string, r chan string) {
 	request := Request("GET", "https://discord.com/assets/"+js, nil, NoHeaders, true, in.Client)
 
 	if request.Error != nil {
-		return "", request.Error
+		return
 	}
 
 	if !request.Ok {
-		return "", fmt.Errorf("could not get build number, Status Code: %v", request.StatusCode)
+		return
+	}
+
+	if !strings.Contains(string(request.Body), `buildNumber:"`) {
+		return
 	}
 
 	buildNumber := strings.Split(strings.Split(string(request.Body), `buildNumber:"`)[1], `"`)[0]
 
-	return buildNumber, nil
+	r <- buildNumber
 }
 
 func (in *Instance) GetSuperProperties() string {
@@ -53,6 +70,6 @@ func (in *Instance) GetSuperProperties() string {
 		log.Fatal("Build number not initialized")
 	}
 
-	parsed := `{"os":"Windows","browser":"Chrome","device":"","system_locale":"en-US","browser_user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36","browser_version":"117.0.0.0","os_version":"10","referrer":"","referring_domain":"","referrer_current":"","referring_domain_current":"","release_channel":"stable","client_build_number":%s,"client_event_source":null,"design_id":0}`
+	parsed := `{"os":"Windows","browser":"Chrome","device":"","system_locale":"en-CA","browser_user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36","browser_version":"117.0.0.0","os_version":"10","referrer":"","referring_domain":"","referrer_current":"","referring_domain_current":"","release_channel":"stable","client_build_number":%s,"client_event_source":null,"design_id":0}`
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(parsed, in.BuildNumber)))
 }
