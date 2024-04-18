@@ -56,6 +56,8 @@ func (in *Instance) _GetBuildNumber(js string, r chan string) {
 		return
 	}
 
+	request.Body = []byte(strings.ReplaceAll(string(request.Body), " ", ""))
+
 	if !strings.Contains(string(request.Body), `buildNumber:"`) {
 		return
 	}
