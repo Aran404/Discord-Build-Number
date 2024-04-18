@@ -56,11 +56,11 @@ func (in *Instance) _GetBuildNumber(js string, r chan string) {
 		return
 	}
 
-	if !strings.Contains(string(request.Body), `Build Number:").concat("`) {
+	if !strings.Contains(string(request.Body), `Build Number: ").concat("`) {
 		return
 	}
 
-	buildNumber := strings.Split(strings.Split(string(request.Body), `Build Number:").concat("`)[1], `"`)[0]
+	buildNumber := strings.Split(strings.Split(string(request.Body), `Build Number: ").concat("`)[1], `"`)[0]
 
 	r <- buildNumber
 }
