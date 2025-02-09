@@ -11,7 +11,6 @@ import (
 
 func (in *Instance) GetBuildNumber() (string, error) {
 	resp := Request("GET", "https://discord.com/login", nil, NoHeaders, true, in.Client)
-
 	if resp.Error != nil {
 		return "", resp.Error
 	}
@@ -20,11 +19,10 @@ func (in *Instance) GetBuildNumber() (string, error) {
 		return "", fmt.Errorf("could not get sesssion, status code: %v", resp.StatusCode)
 	}
 
-	jsFile := regexp.MustCompile(`<script src="\/assets\/([a-zA-z0-9.]+)\.js`).FindAll(resp.Body, -1)
+	jsFile := regexp.MustCompile(`<script defer src="\/assets\/([a-zA-Z0-9]+\.)?([a-zA-Z0-9]+)\.js`).FindAll(resp.Body, -1)
 
 	var wg sync.WaitGroup
 	respCh := make(chan string, 1)
-
 	for _, v := range jsFile {
 		wg.Add(1)
 		go func(js string) {
@@ -41,13 +39,11 @@ func (in *Instance) GetBuildNumber() (string, error) {
 	}()
 
 	in.BuildNumber = <-respCh
-
 	return in.BuildNumber, nil
 }
 
 func (in *Instance) _GetBuildNumber(js string, r chan string) {
 	request := Request("GET", "https://discord.com/assets/"+js, nil, NoHeaders, true, in.Client)
-
 	if request.Error != nil {
 		return
 	}
@@ -57,13 +53,11 @@ func (in *Instance) _GetBuildNumber(js string, r chan string) {
 	}
 
 	request.Body = []byte(strings.ReplaceAll(string(request.Body), " ", ""))
-
 	if !strings.Contains(string(request.Body), `buildNumber:"`) {
 		return
 	}
 
 	buildNumber := strings.Split(strings.Split(string(request.Body), `buildNumber:"`)[1], `"`)[0]
-
 	r <- buildNumber
 }
 
